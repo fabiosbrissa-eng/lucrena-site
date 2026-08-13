@@ -27,7 +27,7 @@
     --maxw: 1180px;
   }
   *{box-sizing:border-box;}
-  html{scroll-behavior:smooth;}
+  html{scroll-behavior:auto;}
   @media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto;}
     *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
@@ -51,9 +51,8 @@
 
   /* ---------- NAV ---------- */
   header.site{
-    position:sticky; top:0; z-index:50; background:rgba(250,249,249,0.92);
-    -webkit-backdrop-filter:blur(8px); backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
-    -webkit-transform:translateZ(0); transform:translateZ(0);
+    position:sticky; top:0; z-index:50; background:#FAF9F9;
+    border-bottom:1px solid var(--line);
   }
   .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 28px; max-width:var(--maxw); margin:0 auto;}
   .brand{display:flex; align-items:center; gap:10px; text-decoration:none;}
@@ -74,6 +73,9 @@
   @media (max-width:900px){
     nav.links{display:none;}
     .burger{display:block;}
+  }
+  @media (max-width:480px){
+    .nav-cta{display:none;}
   }
 
   /* ---------- HERO ---------- */
@@ -353,6 +355,7 @@
   <a href="#investimento">Consulta</a>
   <a href="#sobre">Sobre</a>
   <a href="#contato">Contato</a>
+  <a href="#contato" class="btn btn-primary" style="text-align:center; margin-top:24px; font-family:var(--body); border-bottom:none;">Agendar Consulta</a>
 </div>
 
 <main id="top">
@@ -725,6 +728,18 @@
     entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
   }, {threshold:0.12});
   document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // pause the scan animation when it's off-screen, so the browser isn't
+  // compositing it continuously in the background while you scroll elsewhere
+  const scanBeam = document.querySelector('.scan-beam');
+  if(scanBeam){
+    const scanIo = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{
+        scanBeam.style.animationPlayState = e.isIntersecting ? 'running' : 'paused';
+      });
+    }, {threshold:0});
+    scanIo.observe(document.querySelector('.scan-panel'));
+  }
 
   // contact form -> whatsapp message
   function prepWhats(ev){
