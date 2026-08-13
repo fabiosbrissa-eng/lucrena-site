@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lucrena — Auditoria Forense de Dados para Redes de Varejo</title>
+<meta name="description" content="Identificamos e recuperamos até 5% de faturamento invisível em redes de varejo, cruzando PDV, NF-e e inventário. Raio-X de Lucro: auditoria forense em 15 dias.">
+<link rel="icon" type="image/x-icon" href="assets/favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1C1C1C;
+    --ink-soft:#3A3A3A;
+    --crimson:#C41E3A;
+    --crimson-deep:#8E1327;
+    --crimson-bright:#E8425A;
+    --paper:#FAFAF9;
+    --card:#F4F3F2;
+    --line:#E4E2E0;
+    --muted:#7A7A7A;
+    --white:#FFFFFF;
+    --display: 'Space Grotesk', sans-serif;
+    --body: 'Inter', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --maxw: 1180px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+  body{
+    margin:0; font-family:var(--body); color:var(--ink); background:var(--paper);
+    -webkit-font-smoothing:antialiased; line-height:1.55;
+  }
+  img,svg{display:block; max-width:100%;}
+  a{color:inherit;}
+  h1,h2,h3{font-family:var(--display); margin:0; letter-spacing:-0.02em; font-weight:700;}
+  p{margin:0;}
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 28px;}
+  .eyebrow{
+    font-family:var(--mono); font-size:12.5px; font-weight:600; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--crimson);
+  }
+  .eyebrow.on-dark{color:var(--crimson-bright);}
+  section{padding:96px 0;}
+  @media (max-width:720px){ section{padding:64px 0;} }
+
+  /* ---------- NAV ---------- */
+  header.site{
+    position:sticky; top:0; z-index:50; background:rgba(250,249,249,0.92);
+    backdrop-filter:blur(8px); border-bottom:1px solid var(--line);
+  }
+  .nav{display:flex; align-items:center; justify-content:space-between; padding:16px 28px; max-width:var(--maxw); margin:0 auto;}
+  .brand{display:flex; align-items:center; gap:10px; text-decoration:none;}
+  .brand-mark{width:30px; height:30px;}
+  .brand-word{font-family:var(--display); font-weight:700; font-size:20px; color:var(--ink);}
+  nav.links{display:flex; gap:32px; list-style:none; margin:0; padding:0;}
+  nav.links a{font-size:14.5px; font-weight:500; text-decoration:none; color:var(--ink-soft); transition:color .15s;}
+  nav.links a:hover{color:var(--crimson);}
+  .nav-cta{
+    font-family:var(--body); font-weight:600; font-size:14px; text-decoration:none;
+    background:var(--ink); color:var(--white); padding:11px 20px; border-radius:6px;
+    transition:background .15s;
+  }
+  .nav-cta:hover{background:var(--crimson);}
+  .nav-right{display:flex; align-items:center; gap:32px;}
+  .burger{display:none; background:none; border:0; cursor:pointer; padding:6px;}
+  .burger span{display:block; width:22px; height:2px; background:var(--ink); margin:4px 0;}
+  @media (max-width:900px){
+    nav.links{display:none;}
+    .burger{display:block;}
+  }
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:var(--ink); color:var(--white); padding:88px 0 0; overflow:hidden; position:relative;
+  }
+  .hero .wrap{display:grid; grid-template-columns:1.05fr 0.95fr; gap:56px; align-items:center; padding-bottom:64px;}
+  @media (max-width:980px){ .hero .wrap{grid-template-columns:1fr; padding-bottom:40px;} }
+  .hero h1{font-size:clamp(34px,4.6vw,54px); line-height:1.08; margin:18px 0 22px; color:var(--white);}
+  .hero h1 em{font-style:normal; color:var(--crimson-bright);}
+  .hero p.lead{font-size:17px; color:#C9C9C9; max-width:46ch; margin-bottom:32px;}
+  .cta-row{display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--body); font-weight:600; font-size:15px; text-decoration:none;
+    padding:14px 24px; border-radius:7px; display:inline-block; transition:transform .15s, background .15s, opacity .15s;
+  }
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--crimson); color:var(--white);}
+  .btn-primary:hover{background:var(--crimson-bright);}
+  .btn-ghost{background:transparent; color:var(--white); border:1.5px solid rgba(255,255,255,0.35);}
+  .btn-ghost:hover{border-color:#fff;}
+  .btn-dark{background:var(--ink); color:var(--white);}
+  .btn-dark:hover{background:var(--crimson);}
+
+  /* ledger scan visual - signature element */
+  .scan-panel{
+    background:#141414; border:1px solid #2C2C2C; border-radius:12px; padding:22px 22px 24px;
+    position:relative; overflow:hidden; font-family:var(--mono);
+  }
+  .scan-panel .row{
+    display:flex; justify-content:space-between; padding:9px 4px; border-bottom:1px solid #262626; font-size:13px;
+  }
+  .scan-panel .row:last-child{border-bottom:none;}
+  .scan-panel .row span:first-child{color:#8A8A8A;}
+  .scan-panel .row span:last-child{color:#5C5C5C; filter:blur(0.4px);}
+  .scan-panel .row.found span:last-child{color:var(--crimson-bright); font-weight:600;}
+  .scan-beam{
+    position:absolute; top:0; left:-30%; width:22%; height:100%;
+    background:linear-gradient(100deg, transparent, rgba(232,66,90,0.16) 45%, rgba(232,66,90,0.32) 50%, rgba(232,66,90,0.16) 55%, transparent);
+    animation:sweep 4.5s ease-in-out infinite;
+  }
+  @keyframes sweep{
+    0%{left:-30%;} 45%{left:105%;} 100%{left:105%;}
+  }
+  .scan-result{
+    margin-top:18px; padding-top:16px; border-top:1px dashed #333;
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  .scan-result .label{font-size:11px; color:#8A8A8A; letter-spacing:0.08em; text-transform:uppercase;}
+  .scan-result .value{font-size:26px; font-weight:600; color:var(--crimson-bright); font-family:var(--mono);}
+
+  .stat-strip{
+    background:var(--crimson-deep); border-top:1px solid rgba(255,255,255,0.08);
+  }
+  .stat-strip .wrap{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:24px; padding:28px;
+  }
+  .stat-strip .item{text-align:center; color:var(--white);}
+  .stat-strip .item b{display:block; font-family:var(--mono); font-size:30px; font-weight:600;}
+  .stat-strip .item span{font-size:12.5px; color:#F0C7CE; letter-spacing:0.03em;}
+  @media (max-width:720px){ .stat-strip .wrap{grid-template-columns:1fr; gap:18px;} }
+
+  /* ---------- GENERIC SECTION HEAD ---------- */
+  .section-head{max-width:640px; margin-bottom:48px;}
+  .section-head h2{font-size:clamp(26px,3.4vw,38px); margin:14px 0 12px;}
+  .section-head p{color:var(--muted); font-size:16px;}
+  .section-head.center{margin-left:auto; margin-right:auto; text-align:center;}
+
+  /* ---------- PROBLEMA ---------- */
+  .problem-grid{display:grid; grid-template-columns:repeat(3,1fr) ; gap:22px; margin-bottom:36px;}
+  @media (max-width:860px){ .problem-grid{grid-template-columns:1fr;} }
+  .p-card{background:var(--white); border:1px solid var(--line); border-radius:10px; padding:26px;}
+  .p-card .num{font-family:var(--mono); color:var(--crimson); font-size:13px; font-weight:600; margin-bottom:14px; display:block;}
+  .p-card h3{font-size:18px; margin-bottom:10px;}
+  .p-card p{font-size:14.5px; color:var(--muted);}
+  .callout{
+    background:var(--ink); color:var(--white); border-radius:10px; padding:30px 32px;
+    display:flex; gap:28px; align-items:center; flex-wrap:wrap; justify-content:space-between;
+  }
+  .callout p{font-size:16px; max-width:52ch; color:#D8D8D8;}
+  .callout .big{font-family:var(--mono); font-size:44px; font-weight:600; color:var(--crimson-bright); white-space:nowrap;}
+  .callout .big small{display:block; font-size:11px; font-family:var(--body); color:#9A9A9A; font-weight:500; letter-spacing:0.05em; text-transform:uppercase;}
+
+  /* ---------- DIAGNOSTICO / CHART ---------- */
+  .diag-grid{display:grid; grid-template-columns:1.2fr 0.8fr; gap:40px; align-items:center;}
+  @media (max-width:900px){ .diag-grid{grid-template-columns:1fr;} }
+  .chart-card, .roi-card{background:var(--white); border:1px solid var(--line); border-radius:10px; padding:28px;}
+  .chart-card svg text, .roi-card svg text{font-family:var(--mono); fill:var(--muted);}
+  .bignum-card{background:var(--crimson); color:var(--white); border-radius:10px; padding:30px; margin-bottom:18px;}
+  .bignum-card .value{font-family:var(--mono); font-size:38px; font-weight:600;}
+  .bignum-card p{font-size:14.5px; margin-top:8px; color:#FADADF;}
+  .note-card{background:var(--card); border-radius:10px; padding:24px; font-size:14.5px; color:var(--ink-soft);}
+
+  /* ---------- METODOLOGIA (dark) ---------- */
+  .method{background:var(--ink); color:var(--white);}
+  .method .section-head p{color:#ADADAD;}
+  .method .section-head h2{color:var(--white);}
+  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  @media (max-width:860px){ .steps{grid-template-columns:1fr;} }
+  .step{background:#242424; border:1px solid #333; border-radius:10px; padding:28px;}
+  .step .step-num{
+    font-family:var(--mono); font-size:13px; color:var(--crimson-bright); font-weight:600;
+    border:1px solid rgba(232,66,90,0.4); border-radius:20px; padding:4px 12px; display:inline-block; margin-bottom:16px;
+  }
+  .step h3{font-size:18px; color:var(--white); margin-bottom:6px;}
+  .step .tag{font-family:var(--mono); font-size:11.5px; color:#8A8A8A; letter-spacing:0.05em; text-transform:uppercase; display:block; margin-bottom:10px;}
+  .step p{font-size:14.5px; color:#B8B8B8;}
+  .method-total{text-align:center; margin-top:36px; color:#8A8A8A; font-family:var(--mono); font-size:13px;}
+  .method-total b{color:var(--white);}
+
+  /* ---------- TECH & SECURITY ---------- */
+  .twocol{display:grid; grid-template-columns:1fr 1fr; gap:24px;}
+  @media (max-width:860px){ .twocol{grid-template-columns:1fr;} }
+  .feat-card{background:var(--white); border:1px solid var(--line); border-radius:10px; padding:32px;}
+  .feat-card .icon{
+    width:44px; height:44px; border-radius:9px; background:var(--card); display:flex; align-items:center; justify-content:center; margin-bottom:20px;
+  }
+  .feat-card h3{font-size:19px; margin-bottom:10px;}
+  .feat-card p{font-size:14.5px; color:var(--muted); margin-bottom:14px;}
+  .feat-card p:last-child{margin-bottom:0;}
+  .feat-card strong{color:var(--ink);}
+
+  /* ---------- CASOS ---------- */
+  .case-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:22px;}
+  @media (max-width:860px){ .case-grid{grid-template-columns:1fr;} }
+  .case-card{background:var(--card); border-radius:10px; padding:28px; transition:box-shadow .2s, transform .2s;}
+  .case-card:hover{box-shadow:0 12px 30px rgba(0,0,0,0.08); transform:translateY(-3px);}
+  .case-card .value{font-family:var(--mono); color:var(--crimson); font-size:32px; font-weight:600;}
+  .case-card .tag{font-size:11.5px; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); display:block; margin:6px 0 18px;}
+  .case-card h3{font-size:17px; margin-bottom:10px;}
+  .case-card p{font-size:14px; color:var(--muted);}
+
+  /* ---------- INVESTIMENTO ---------- */
+  .invest{background:var(--ink); color:var(--white);}
+  .invest .section-head h2{color:var(--white);}
+  .invest .section-head p{color:#ADADAD;}
+  .invest-grid{display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:stretch;}
+  @media (max-width:900px){ .invest-grid{grid-template-columns:1fr;} }
+  .price-card{background:#242424; border:1px solid #333; border-radius:12px; padding:36px;}
+  .price-card .price{font-family:var(--mono); font-size:44px; font-weight:600; color:var(--white); margin:10px 0 4px;}
+  .price-card .price-sub{color:#8A8A8A; font-size:14px; margin-bottom:26px;}
+  .price-card ul{list-style:none; margin:0 0 28px; padding:0;}
+  .price-card li{
+    font-size:14.5px; color:#D0D0D0; padding:11px 0 11px 26px; border-top:1px solid #333; position:relative;
+  }
+  .price-card li:first-child{border-top:none;}
+  .price-card li::before{content:"✓"; position:absolute; left:0; color:var(--crimson-bright); font-weight:700;}
+  .guarantee-card{
+    background:var(--crimson); border-radius:12px; padding:36px; display:flex; flex-direction:column; justify-content:flex-start;
+  }
+  .guarantee-card .tag{font-family:var(--mono); font-size:12px; letter-spacing:0.1em; text-transform:uppercase; color:#FADADF; margin-bottom:14px; display:block;}
+  .guarantee-card h3{font-size:24px; color:var(--white); margin-bottom:14px;}
+  .guarantee-card p{color:#FADADF; font-size:15px; margin-bottom:18px;}
+  .guarantee-card blockquote{
+    margin:0; font-size:14.5px; color:var(--white); font-style:normal; border-top:1px solid rgba(255,255,255,0.25); padding-top:18px;
+  }
+
+  /* ---------- ROI ---------- */
+  .roi-stats{display:grid; grid-template-columns:repeat(4,1fr); gap:18px; margin-top:28px;}
+  @media (max-width:720px){ .roi-stats{grid-template-columns:1fr 1fr;} }
+  .roi-stat{text-align:center; padding:18px 10px; background:var(--card); border-radius:9px;}
+  .roi-stat b{display:block; font-family:var(--mono); font-size:22px; color:var(--crimson);}
+  .roi-stat span{font-size:12px; color:var(--muted);}
+
+  /* ---------- COMO COMECAR ---------- */
+  .timeline{position:relative; margin-top:12px;}
+  .tl-item{display:grid; grid-template-columns:56px 1fr; gap:20px; padding-bottom:36px; position:relative;}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item::before{
+    content:""; position:absolute; left:27px; top:52px; bottom:-4px; width:1px; background:var(--line);
+  }
+  .tl-item:last-child::before{display:none;}
+  .tl-dot{
+    width:56px; height:56px; border-radius:50%; background:var(--ink); color:var(--white);
+    display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-weight:600; font-size:17px; flex-shrink:0;
+  }
+  .tl-content h3{font-size:17px; margin-bottom:6px;}
+  .tl-content p{font-size:14.5px; color:var(--muted); max-width:56ch;}
+
+  /* ---------- SOBRE ---------- */
+  .about-grid{display:grid; grid-template-columns:200px 1fr; gap:40px; align-items:start;}
+  @media (max-width:720px){ .about-grid{grid-template-columns:1fr;} }
+  .avatar{
+    width:180px; height:180px; border-radius:14px; background:var(--ink); color:var(--white);
+    display:flex; align-items:center; justify-content:center; font-family:var(--display); font-size:52px; font-weight:700;
+  }
+  .about-grid h3{font-size:24px; margin-bottom:4px;}
+  .about-grid .role{font-family:var(--mono); font-size:13px; color:var(--crimson); margin-bottom:16px; display:block;}
+  .about-grid p{font-size:15.5px; color:var(--ink-soft); max-width:64ch;}
+
+  /* ---------- CTA FINAL / CONTATO ---------- */
+  .final-cta{background:var(--crimson); color:var(--white); position:relative; overflow:hidden;}
+  .final-cta .wrap{position:relative; z-index:1;}
+  .final-cta h2{color:var(--white); font-size:clamp(28px,4vw,42px); max-width:18ch;}
+  .final-cta p.lead{color:#FADADF; font-size:16.5px; max-width:52ch; margin:16px 0 34px;}
+  .contact-grid{display:grid; grid-template-columns:1.1fr 0.9fr; gap:40px;}
+  @media (max-width:900px){ .contact-grid{grid-template-columns:1fr;} }
+  .contact-links{display:flex; flex-direction:column; gap:16px; margin-top:8px;}
+  .contact-links a{
+    text-decoration:none; color:var(--white); font-weight:600; font-size:16px; display:flex; align-items:center; gap:10px;
+    background:rgba(0,0,0,0.15); padding:14px 18px; border-radius:8px; transition:background .15s;
+  }
+  .contact-links a:hover{background:rgba(0,0,0,0.28);}
+  form.contact-form{background:var(--white); border-radius:12px; padding:28px; display:grid; gap:14px;}
+  form.contact-form input, form.contact-form textarea{
+    width:100%; border:1px solid var(--line); border-radius:7px; padding:12px 14px; font-family:var(--body);
+    font-size:14.5px; color:var(--ink); background:var(--paper);
+  }
+  form.contact-form textarea{min-height:90px; resize:vertical;}
+  form.contact-form label{font-size:12.5px; font-weight:600; color:var(--ink-soft); margin-bottom:-8px;}
+  form.contact-form button{
+    background:var(--ink); color:var(--white); border:none; border-radius:7px; padding:14px; font-family:var(--body);
+    font-weight:600; font-size:15px; cursor:pointer; transition:background .15s;
+  }
+  form.contact-form button:hover{background:#000;}
+
+  footer{background:var(--ink); color:#8A8A8A; padding:36px 0; font-size:13.5px;}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
+  footer .brand-word{color:#D8D8D8;}
+
+  .reveal{opacity:0; transform:translateY(16px); transition:opacity .6s ease, transform .6s ease;}
+  .reveal.in{opacity:1; transform:translateY(0);}
+
+  /* mobile nav drawer */
+  .mobile-drawer{
+    position:fixed; inset:0; background:var(--ink); z-index:100; display:flex; flex-direction:column;
+    padding:24px 28px; transform:translateX(100%); transition:transform .25s ease;
+  }
+  .mobile-drawer.open{transform:translateX(0);}
+  .mobile-drawer .top{display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;}
+  .mobile-drawer a{color:var(--white); text-decoration:none; font-family:var(--display); font-size:26px; padding:14px 0; border-bottom:1px solid #2C2C2C;}
+  .mobile-drawer .close{background:none; border:none; color:var(--white); font-size:28px; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header class="site">
+  <div class="nav">
+    <a class="brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="42" cy="42" r="28" fill="none" stroke="#1C1C1C" stroke-width="8"/>
+        <rect x="24" y="45" width="7" height="14" rx="1.3" fill="#8A8A8A"/>
+        <rect x="37" y="35" width="7" height="24" rx="1.3" fill="#1C1C1C"/>
+        <rect x="50" y="24" width="7" height="35" rx="1.3" fill="#C41E3A"/>
+        <line x1="63" y1="63" x2="86" y2="86" stroke="#1C1C1C" stroke-width="9" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-word">Lucrena</span>
+    </a>
+    <div class="nav-right">
+      <nav class="links">
+        <a href="#problema">O Problema</a>
+        <a href="#metodologia">Metodologia</a>
+        <a href="#casos">Casos</a>
+        <a href="#investimento">Consulta</a>
+        <a href="#sobre">Sobre</a>
+      </nav>
+      <a class="nav-cta" href="#contato">Agendar Consulta</a>
+      <button class="burger" id="burgerBtn" aria-label="Abrir menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="mobile-drawer" id="mobileDrawer">
+  <div class="top">
+    <span class="brand-word" style="color:#fff;">Lucrena</span>
+    <button class="close" id="closeDrawer" aria-label="Fechar menu">×</button>
+  </div>
+  <a href="#problema">O Problema</a>
+  <a href="#metodologia">Metodologia</a>
+  <a href="#casos">Casos</a>
+  <a href="#investimento">Consulta</a>
+  <a href="#sobre">Sobre</a>
+  <a href="#contato">Contato</a>
+</div>
+
+<main id="top">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <span class="eyebrow on-dark">Auditoria forense de dados para redes de varejo</span>
+        <h1>O que o seu ERP não vê,<br><em>o seu caixa sente.</em></h1>
+        <p class="lead">Cruzamos PDV, XML de NF-e e inventário para encontrar o faturamento que desaparece todo mês — sem que o sistema acuse a perda.</p>
+        <div class="cta-row">
+          <a class="btn btn-primary" href="#contato">Agendar Consulta</a>
+          <a class="btn btn-ghost" href="#metodologia">Ver como funciona</a>
+        </div>
+      </div>
+      <div class="scan-panel reveal">
+        <div class="scan-beam"></div>
+        <div class="row"><span>Vendas registradas (PDV)</span><span>R$ 1.000.000</span></div>
+        <div class="row"><span>Fiscal — NF-e vs. estoque</span><span>— R$ 16.000</span></div>
+        <div class="row"><span>PDV — cancelamentos/sangrias</span><span>— R$ 20.000</span></div>
+        <div class="row found"><span>Estoque — divergência física</span><span>— R$ 14.000</span></div>
+        <div class="scan-result">
+          <span class="label">Total invisível / mês</span>
+          <span class="value">R$ 50.000</span>
+        </div>
+      </div>
+    </div>
+    <div class="stat-strip">
+      <div class="wrap">
+        <div class="item"><b>3–5%</b><span>do faturamento some por mês</span></div>
+        <div class="item"><b>15 dias</b><span>do acesso ao relatório final</span></div>
+        <div class="item"><b>728%</b><span>ROI médio em 6 meses</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- O PROBLEMA -->
+  <section id="problema">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">O Problema</span>
+        <h2>O "buraco negro" operacional</h2>
+        <p>Por que seu caixa fecha certo todos os dias, mas o lucro não corresponde ao esperado.</p>
+      </div>
+      <div class="problem-grid">
+        <div class="p-card reveal">
+          <span class="num">01</span>
+          <h3>Divergência de peso</h3>
+          <p>Balanças descalibradas no açougue e hortifruti geram perdas silenciosas a cada venda registrada.</p>
+        </div>
+        <div class="p-card reveal">
+          <span class="num">02</span>
+          <h3>Notas fantasmas</h3>
+          <p>Amostras e mercadorias não entregues que nunca entram no sistema fiscal — mas geram custo real.</p>
+        </div>
+        <div class="p-card reveal">
+          <span class="num">03</span>
+          <h3>Fraude no PDV</h3>
+          <p>Cancelamentos, sangrias e devoluções irregulares mascaram desvios de caixa no ponto de venda.</p>
+        </div>
+      </div>
+      <div class="callout reveal">
+        <p>O ERP registra o "ideal"; a operação vive o "real" — a diferença entre os dois é prejuízo puro, mês após mês.</p>
+        <div class="big">3–5%<small>do faturamento, todo mês</small></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIAGNOSTICO -->
+  <section id="diagnostico" style="background:var(--card);">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Diagnóstico</span>
+        <h2>Impacto das perdas operacionais</h2>
+        <p>Corrosão silenciosa de margens em redes de varejo — três frentes, um único prejuízo.</p>
+      </div>
+      <div class="diag-grid">
+        <div class="chart-card reveal">
+          <svg viewBox="0 0 400 260" width="100%">
+            <line x1="20" y1="220" x2="380" y2="220" stroke="#E4E2E0" stroke-width="1"/>
+            <rect x="40" y="76" width="70" height="144" rx="4" fill="#C41E3A"/>
+            <text x="75" y="66" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">R$16.000</text>
+            <text x="75" y="240" text-anchor="middle" font-size="13">Fiscal</text>
+
+            <rect x="165" y="40" width="70" height="180" rx="4" fill="#8E1327"/>
+            <text x="200" y="30" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">R$20.000</text>
+            <text x="200" y="240" text-anchor="middle" font-size="13">PDV</text>
+
+            <rect x="290" y="94" width="70" height="126" rx="4" fill="#1C1C1C"/>
+            <text x="325" y="84" text-anchor="middle" font-size="14" font-weight="600" fill="#1C1C1C">R$14.000</text>
+            <text x="325" y="240" text-anchor="middle" font-size="13">Estoque</text>
+          </svg>
+        </div>
+        <div>
+          <div class="bignum-card reveal">
+            <div class="value">R$ 50.000</div>
+            <p>invisíveis por mês em uma rede com R$ 1M/mês de faturamento.</p>
+          </div>
+          <div class="note-card reveal">
+            Perda típica de 3–5% do faturamento corrói o lucro líquido — mesmo com o caixa fechando certo todos os dias.
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- METODOLOGIA -->
+  <section id="metodologia" class="method">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow on-dark">Metodologia</span>
+        <h2>Cruzamento de dados brutos em 15 dias</h2>
+        <p>Um processo forense em três etapas — da coleta segura ao relatório de oportunidades.</p>
+      </div>
+      <div class="steps">
+        <div class="step reveal">
+          <span class="step-num">01</span>
+          <span class="tag">Dados brutos — NDA rigoroso</span>
+          <h3>Coleta segura</h3>
+          <p>Exportação segura de dados do PDV, XMLs de NF-e e inventários físicos. Assinatura de NDA rigoroso antes de qualquer acesso.</p>
+        </div>
+        <div class="step reveal">
+          <span class="step-num">02</span>
+          <span class="tag">Normalização e scripts</span>
+          <h3>Processamento e cruzamento</h3>
+          <p>Normalização de SKUs, cruzamento automatizado de múltiplas bases e execução de scripts para identificar divergências entre ERP e operação real.</p>
+        </div>
+        <div class="step reveal">
+          <span class="step-num">03</span>
+          <span class="tag">Outliers e inconsistências</span>
+          <h3>Detecção de anomalias</h3>
+          <p>Identificação de outliers em cancelamentos, ajustes e sangrias. Cruzamento físico vs. sistema e relatório executivo com oportunidades de recuperação.</p>
+        </div>
+      </div>
+      <p class="method-total">Do primeiro acesso ao relatório final: <b>15 dias corridos.</b></p>
+    </div>
+  </section>
+
+  <!-- TECNOLOGIA & SEGURANCA -->
+  <section id="tecnologia">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Tecnologia e Confiança</span>
+        <h2>Precisão forense, sem gargalos</h2>
+        <p>Ferramentas próprias para cruzar grandes volumes de dados com segurança de ponta a ponta.</p>
+      </div>
+      <div class="twocol">
+        <div class="feat-card reveal">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M4 19V9M12 19V5M20 19v-7" stroke="#C41E3A" stroke-width="2.4" stroke-linecap="round"/></svg>
+          </div>
+          <h3>Tecnologia e ferramentas</h3>
+          <p>Integramos automaticamente dados de diferentes fontes — PDV, ERP, XML fiscal e estoque — eliminando erros manuais e acelerando a detecção de divergências críticas.</p>
+          <p><strong>Por que superamos o Excel tradicional:</strong> ele trava com grandes volumes e não cruza bases automaticamente. Processamos 15 dias de auditoria com precisão forense, sem gargalos operacionais.</p>
+        </div>
+        <div class="feat-card reveal">
+          <div class="icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v6c0 4.5-3 8-7 9-4-1-7-4.5-7-9V6l7-3z" stroke="#C41E3A" stroke-width="2.2" stroke-linejoin="round"/></svg>
+          </div>
+          <h3>Segurança e confidencialidade</h3>
+          <p>Todos os dados recebidos são tratados com sigilo absoluto. Nenhuma informação é compartilhada com terceiros — arquivos armazenados em ambiente seguro e deletados após a entrega do relatório.</p>
+          <p><strong>NDA rigoroso</strong> antes de qualquer acesso e protocolos criptografados, auditáveis e rastreáveis em cada etapa.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CASOS -->
+  <section id="casos" style="background:var(--card);">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Resultados</span>
+        <h2>Prova de conceito: casos reais</h2>
+        <p>Resultados comprovados em clientes reais de diferentes segmentos de varejo.</p>
+      </div>
+      <div class="case-grid">
+        <div class="case-card reveal">
+          <div class="value">R$ 6.300</div>
+          <span class="tag">Recuperados por mês</span>
+          <h3>Case Açougue</h3>
+          <p>Rede com 5 lojas. Descalibragem de balanças e erros de digitação geravam perdas silenciosas. Cruzamento forense de PDV e inventário identificou e corrigiu os desvios.</p>
+        </div>
+        <div class="case-card reveal">
+          <div class="value">R$ 3.010</div>
+          <span class="tag">Recuperados por mês</span>
+          <h3>Case Bebidas</h3>
+          <p>Atacadista de bebidas com amostras e avarias sem baixa fiscal. Cruzamento de XML de NF-e com inventário revelou divergências sistemáticas não detectadas pelo ERP.</p>
+        </div>
+        <div class="case-card reveal">
+          <div class="value">R$ 4.500</div>
+          <span class="tag">Recuperados por mês</span>
+          <h3>Case Moda</h3>
+          <p>Rede de moda com padrão anômalo de cancelamentos no PDV. Auditoria identificou operadores com permissões irregulares e desvios mascarados por devoluções fraudulentas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONSULTA -->
+  <section id="investimento" class="invest">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow on-dark">Próximo passo</span>
+        <h2>Vamos conhecer a sua operação</h2>
+        <p>Cada rede tem uma realidade diferente. Antes de falar de proposta, agende uma consulta para entendermos onde estão as suas perdas.</p>
+      </div>
+      <div class="invest-grid">
+        <div class="price-card reveal">
+          <span class="eyebrow on-dark">Consulta inicial</span>
+          <div class="price" style="font-size:30px; line-height:1.3;">O que você recebe</div>
+          <div class="price-sub">Uma conversa de 20-30 minutos, sem compromisso</div>
+          <ul>
+            <li>Diagnóstico inicial da sua operação e dos pontos de risco mais comuns</li>
+            <li>Estimativa do potencial de recuperação para o porte da sua rede</li>
+            <li>Explicação da metodologia, prazos e proposta sob medida</li>
+          </ul>
+          <a class="btn btn-primary" href="#contato" style="width:100%; text-align:center;">Agendar consulta</a>
+        </div>
+        <div class="guarantee-card reveal">
+          <span class="tag">✓ Garantia risco zero</span>
+          <h3>Devolução de 50% se não encontrarmos oportunidades</h3>
+          <p>Em qualquer proposta que fecharmos depois da consulta, você tem devolução de 50% do investimento caso não sejam identificadas oportunidades de recuperação acima do valor investido no projeto.</p>
+          <blockquote>"Se o Raio-X não encontrar mais do que o próprio custo, metade do investimento volta para o seu caixa. O risco é nosso."</blockquote>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROI -->
+  <section id="roi">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Retorno</span>
+        <h2>Retorno sobre investimento</h2>
+        <p>Recuperação típica de 3–5% do faturamento invisível, com payback em 1 a 2 meses.</p>
+      </div>
+      <div class="roi-card reveal">
+        <svg viewBox="0 0 620 260" width="100%">
+          <polyline points="60,190 160,160 260,130 360,100 460,70 560,40" fill="none" stroke="#1C1C1C" stroke-width="2.5"/>
+          <polygon points="60,190 160,160 260,130 360,100 460,70 560,40 560,220 60,220" fill="#C41E3A" opacity="0.08"/>
+
+          <g font-size="12" fill="#1C1C1C" font-weight="600">
+            <circle cx="60" cy="190" r="4" fill="#C41E3A"/><text x="60" y="176" text-anchor="middle">13.810</text>
+            <circle cx="160" cy="160" r="4" fill="#C41E3A"/><text x="160" y="146" text-anchor="middle">27.620</text>
+            <circle cx="260" cy="130" r="4" fill="#C41E3A"/><text x="260" y="116" text-anchor="middle">41.430</text>
+            <circle cx="360" cy="100" r="4" fill="#C41E3A"/><text x="360" y="86" text-anchor="middle">55.240</text>
+            <circle cx="460" cy="70" r="4" fill="#C41E3A"/><text x="460" y="56" text-anchor="middle">69.050</text>
+            <circle cx="560" cy="40" r="4" fill="#C41E3A"/><text x="560" y="26" text-anchor="middle">82.860</text>
+          </g>
+          <g font-size="12" fill="#7A7A7A">
+            <text x="60" y="238" text-anchor="middle">Mês 1</text>
+            <text x="160" y="238" text-anchor="middle">Mês 2</text>
+            <text x="260" y="238" text-anchor="middle">Mês 3</text>
+            <text x="360" y="238" text-anchor="middle">Mês 4</text>
+            <text x="460" y="238" text-anchor="middle">Mês 5</text>
+            <text x="560" y="238" text-anchor="middle">Mês 6</text>
+          </g>
+        </svg>
+        <div class="roi-stats" style="grid-template-columns:repeat(3,1fr);">
+          <div class="roi-stat"><b>R$ 13.810</b><span>Recuperação média mensal</span></div>
+          <div class="roi-stat"><b>Mês 1–2</b><span>Payback estimado</span></div>
+          <div class="roi-stat"><b>728%</b><span>ROI acumulado em 6 meses</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMO COMECAR -->
+  <section id="comecar" style="background:var(--card);">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Como Começar</span>
+        <h2>Próximos passos para iniciar</h2>
+        <p>Como dar início à sua auditoria forense de dados.</p>
+      </div>
+      <div class="timeline">
+        <div class="tl-item reveal">
+          <div class="tl-dot">1</div>
+          <div class="tl-content"><h3>Assinatura do NDA</h3><p>Garantia total de confidencialidade dos seus dados antes de qualquer acesso.</p></div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-dot">2</div>
+          <div class="tl-content"><h3>Disponibilização segura dos dados</h3><p>PDV, XML de NF-e e inventários — exportados diretamente das fontes primárias.</p></div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-dot">3</div>
+          <div class="tl-content"><h3>Definição do cronograma</h3><p>Alinhamento inicial com a equipe responsável e mapeamento das fontes de dados.</p></div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-dot">4</div>
+          <div class="tl-content"><h3>Análise forense</h3><p>Início da auditoria em até 15 dias após a coleta dos dados.</p></div>
+        </div>
+        <div class="tl-item reveal">
+          <div class="tl-dot">5</div>
+          <div class="tl-content"><h3>Relatório e apresentação</h3><p>Recebimento do relatório executivo e reunião de apresentação dos resultados.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOBRE -->
+  <section id="sobre">
+    <div class="wrap">
+      <div class="section-head reveal">
+        <span class="eyebrow">Sobre</span>
+        <h2>Quem conduz sua auditoria</h2>
+      </div>
+      <div class="about-grid reveal">
+        <div class="avatar">FS</div>
+        <div>
+          <h3>Fabio Sbrissa</h3>
+          <span class="role">Especialista em Auditoria Operacional e Forense de Dados</span>
+          <p>Fabio Sbrissa atua com auditoria operacional e forense de dados para redes de varejo, com acesso de leitura ao ERP ou exportação de Vendas, Estoque e Compras, identificando perdas invisíveis e oportunidades de recuperação de faturamento.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA FINAL / CONTATO -->
+  <section id="contato" class="final-cta">
+    <div class="wrap">
+      <div class="contact-grid">
+        <div>
+          <span class="eyebrow on-dark" style="color:#FADADF;">Comece agora</span>
+          <h2>Solicite sua auditoria forense</h2>
+          <p class="lead">Descubra oportunidades de recuperação de faturamento invisível em redes de varejo. Acesso de leitura ao ERP ou exportação de Vendas, Estoque e Compras.</p>
+          <div class="contact-links">
+            <a href="mailto:fabiosbrissa@hotmail.com">✉ fabiosbrissa@hotmail.com</a>
+            <a href="https://wa.me/5511997300469" target="_blank" rel="noopener">💬 WhatsApp (11) 99730-0469</a>
+          </div>
+        </div>
+        <form class="contact-form" action="https://wa.me/5511997300469" method="get" target="_blank" onsubmit="return prepWhats(event)">
+          <label for="nome">Nome</label>
+          <input id="nome" name="nome" type="text" placeholder="Seu nome" required>
+          <label for="empresa">Rede / Empresa</label>
+          <input id="empresa" name="empresa" type="text" placeholder="Nome da rede e nº de lojas">
+          <label for="email">E-mail</label>
+          <input id="email" name="email" type="email" placeholder="voce@empresa.com" required>
+          <label for="msg">Mensagem</label>
+          <textarea id="msg" name="msg" placeholder="Conte um pouco sobre sua operação"></textarea>
+          <button type="submit">Enviar via WhatsApp</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="brand-word">Lucrena</span>
+    <span>© <span id="year"></span> Lucrena — Auditoria Forense de Dados. Todos os direitos reservados.</span>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // mobile drawer
+  const burger = document.getElementById('burgerBtn');
+  const drawer = document.getElementById('mobileDrawer');
+  const closeDrawer = document.getElementById('closeDrawer');
+  burger.addEventListener('click', ()=> drawer.classList.add('open'));
+  closeDrawer.addEventListener('click', ()=> drawer.classList.remove('open'));
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', ()=> drawer.classList.remove('open')));
+
+  // scroll reveal
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  }, {threshold:0.12});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+  // contact form -> whatsapp message
+  function prepWhats(ev){
+    ev.preventDefault();
+    const nome = document.getElementById('nome').value;
+    const empresa = document.getElementById('empresa').value;
+    const email = document.getElementById('email').value;
+    const msg = document.getElementById('msg').value;
+    const text = `Olá! Sou ${nome}${empresa ? ' da ' + empresa : ''}. E-mail: ${email}. ${msg}`;
+    window.open('https://wa.me/5511997300469?text=' + encodeURIComponent(text), '_blank');
+    return false;
+  }
+</script>
+
+</body>
+</html>

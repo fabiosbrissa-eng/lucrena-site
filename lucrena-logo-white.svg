@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 560 140" width="560" height="140">
+  <defs>
+    <style>
+      .wordmark { font-family: 'Space Grotesk', sans-serif; font-weight: 700; }
+    </style>
+  </defs>
+
+  <g transform="translate(20, 20)">
+    <circle cx="50" cy="50" r="36" fill="none" stroke="#FFFFFF" stroke-width="9"/>
+    <rect x="30" y="52" width="9" height="18" rx="1.5" fill="#B8B8B8"/>
+    <rect x="45.5" y="40" width="9" height="30" rx="1.5" fill="#FFFFFF"/>
+    <rect x="61" y="28" width="9" height="42" rx="1.5" fill="#E8425A"/>
+    <line x1="75.5" y1="75.5" x2="102" y2="102" stroke="#FFFFFF" stroke-width="11" stroke-linecap="round"/>
+  </g>
+
+  <text x="150" y="88" class="wordmark" font-size="58" fill="#FFFFFF" letter-spacing="-1">Lucrena</text>
+</svg>
